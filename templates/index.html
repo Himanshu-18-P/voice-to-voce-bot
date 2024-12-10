@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice to Voice chat bot</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background: #3f51b5;
+            color: #fff;
+            text-align: center;
+            padding: 30px;
+            font-size: 2em;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 20px;
+        }
+
+        .chat-wrapper {
+            width: 100%;
+            max-width: 800px;
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow-y: auto;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 20px;
+            line-height: 1.4;
+            word-break: break-word;
+            font-size: 1.2em;
+        }
+
+        .message-user {
+            background: #3f51b5;
+            color: #fff;
+            align-self: flex-end;
+        }
+
+        .message-api {
+            background: #e0e0e0;
+            color: #333;
+            align-self: flex-start;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            background: #fafafa;
+        }
+
+        .controls button {
+            padding: 15px 30px;
+            background: #3f51b5;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        .controls button:hover {
+            background: #303f9f;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Voice to Voice chat bot</h1>
+    </header>
+    <div class="container">
+        <div class="chat-wrapper">
+            <div class="messages" id="messages"></div>
+            <div class="controls">
+                <button id="startBtn">Speak!</button>
+                <button id="stopBtn">Stop</button>
+            </div>
+        </div>
+        <div class="status" id="statusMsg">Idle</div>
+    </div>
+    <script>
+        // Web Speech API Setup
+        let sr = window.webkitSpeechRecognition || window.SpeechRecognition;
+        let spRec = new sr();
+        spRec.lang = "en";
+        spRec.continuous = true;
+        spRec.interimResults = true;
+
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const messagesDiv = document.getElementById('messages');
+        const statusMsg = document.getElementById('statusMsg');
+
+        let recognizing = false;
+        let finalText = "";
+        let conversation = []; // {role: 'user'|'api', text: '...'}
+        let lastSpeechTime = null;
+        let shouldStopAll = false; // if user pressed stop, don't auto-restart
+        const SILENCE_DURATION = 3000; // 2 seconds
+
+        let currentAudio = null; // Holds the currently playing audio
+
+        function startRecognition() {
+            if (shouldStopAll) return; // If stopped, don't start again
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            if (!recognizing) {
+                finalText = "";
+                spRec.start();
+                recognizing = true;
+                statusMsg.textContent = "Listening...";
+                lastSpeechTime = Date.now();
+            }
+        }
+
+        startBtn.addEventListener("click", () => {
+            shouldStopAll = false; // If user clicked Speak again, allow looping
+            startRecognition();
+        });
+
+        stopBtn.addEventListener("click", () => {
+            // Stop the conversation loop
+            shouldStopAll = true;
+            if (recognizing) {
+                spRec.stop();
+                recognizing = false;
+                statusMsg.textContent = "Stopped. Processing...";
+            }
+            // Stop audio if playing
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+        });
+
+        spRec.onresult = res => {
+            let interim = "";
+            for (let i = res.resultIndex; i < res.results.length; i++) {
+                let transcript = res.results[i][0].transcript;
+                if (res.results[i].isFinal) {
+                    finalText += transcript.trim() + " ";
+                    lastSpeechTime = Date.now(); // reset silence timer
+                } else {
+                    interim += transcript;
+                    lastSpeechTime = Date.now(); // reset silence timer
+                }
+            }
+            statusMsg.textContent = interim ? "Interim: " + interim : "Listening...";
+        };
+
+        spRec.onend = () => {
+            recognizing = false;
+            finalText = finalText.trim();
+            if (finalText && !shouldStopAll) {
+                statusMsg.textContent = "Processing final text...";
+                // Add user message to conversation
+                addMessage({ role: 'user', text: finalText });
+                sendToBackend(finalText);
+            } else {
+                if (shouldStopAll) {
+                    statusMsg.textContent = "Stopped by user.";
+                } else {
+                    statusMsg.textContent = "No speech detected.";
+                }
+            }
+        };
+
+        function sendToBackend(text) {
+            fetch("http://127.0.0.1:5000/process", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (shouldStopAll) {
+                    // If user pressed stop after request was sent but before response,
+                    // don't proceed with playback or further actions.
+                    statusMsg.textContent = "Stopped by user.";
+                    return;
+                }
+
+                console.log("Response from backend:", data);
+                statusMsg.textContent = "Idle";
+
+                // Add API message
+                if (data.text) {
+                    addMessage({ role: 'api', text: data.text });
+                }
+
+                renderConversation(conversation);
+
+                // Play the audio if present
+                if (data.audio) {
+                    playBase64Audio(data.audio, () => {
+                        // On audio end, automatically start recognition again if allowed
+                        if (!shouldStopAll) {
+                            startRecognition();
+                        }
+                    });
+                } else {
+                    // If no audio, just start again
+                    if (!shouldStopAll) {
+                        startRecognition();
+                    }
+                }
+
+            })
+            .catch(err => {
+                console.error("Error from backend:", err);
+                statusMsg.textContent = "Error sending to backend";
+            });
+        }
+
+        function addMessage(message) {
+            conversation.push(message);
+            // Keep only last 2 rounds of conversation: max 4 messages (2 user, 2 api)
+            while (conversation.length > 4) {
+                conversation.shift();
+            }
+        }
+
+        function renderConversation(convArray) {
+            messagesDiv.innerHTML = "";
+            convArray.forEach(msg => {
+                let div = document.createElement('div');
+                div.classList.add('message-bubble');
+                if (msg.role === 'user') {
+                    div.classList.add('message-user');
+                } else {
+                    div.classList.add('message-api');
+                }
+                div.textContent = msg.text;
+                messagesDiv.appendChild(div);
+            });
+        }
+
+        // Check for silence - if no speech for 2 seconds, stop automatically
+        setInterval(() => {
+            if (recognizing && lastSpeechTime && (Date.now() - lastSpeechTime > SILENCE_DURATION)) {
+                statusMsg.textContent = "Silence detected, processing...";
+                spRec.stop();
+            }
+        }, 500);
+
+        function playBase64Audio(base64Audio, onEndedCallback) {
+            const audioBlob = base64ToBlob(base64Audio, "audio/wav");
+            const audioURL = URL.createObjectURL(audioBlob);
+            // If there's currently audio playing, stop it
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            currentAudio = new Audio(audioURL);
+            currentAudio.play();
+            currentAudio.onended = () => {
+                if (onEndedCallback) onEndedCallback();
+            };
+        }
+
+        function base64ToBlob(base64, contentType='audio/wav') {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], {type: contentType});
+        }
+    </script>
+</body>
+</html>
