@@ -25,9 +25,9 @@
   API_KEY='your_api_key'
 
 ## Installation
-git clone https://github.com/Himanshu-18-P/voice-to-voce-bot.git
-cd voice-to-voce-bot
-pip install -r requirements.txt
+- git clone https://github.com/Himanshu-18-P/voice-to-voce-bot.git
+- cd voice-to-voce-bot
+- pip install -r requirements.txt
 
 ## Configuration
 - mkdir log
