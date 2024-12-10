@@ -1,6 +1,6 @@
 # voice-to-voce-bot
 
-**voice-to-voce-bot** is an interactive voice-to-voice conversational assistant. You can speak a question in natural language, and it will respond with a human-like voice. This bot leverages language models and text-to-speech services to provide a seamless, spoken Q&A experience.
+**voice-to-voce-bot** is an interactive voice-to-voice conversational assistant that accepts natural language speech queries and responds in a human-like voice. It leverages advanced language models and text-to-speech (TTS) services to deliver a smooth, spoken Q&A experience.
 
 ## Table of Contents
 
@@ -13,22 +13,39 @@
 
 ## Features
 
-- **Natural Language Input:** Ask questions just like you would to a human.
-- **Human-like Responses:** The bot generates voice responses using advanced text-to-speech (TTS) technology.
-- **Customizable Backends:** Easily integrate different language models or speech APIs.
-
-## Installation
+- **Natural Language Input:** Speak your questions as you would to another person.
+- **Human-like Responses:** Uses advanced TTS to provide responses in a natural, lifelike voice.
+- **Customizable Backends:** Integrate with various language models or speech APIs as needed.
 
 **Prerequisites:**
 - Python 3.8+
-- Create a `log/` directory for logs.
-- A `.env.secrets` file (placed in the project root) with the following environment variables:
-  - `GROQ_API_KEY=''`
-  - `API_KEY=''`
-- A `google_api/` folder containing `google_tts.json` (your Google TTS credentials).
+- A `.env.secrets` file in the project root with:
+  ```bash
+  GROQ_API_KEY='your_groq_api_key'
+  API_KEY='your_api_key'
 
-**Steps:**
-```bash
+## Installation
 git clone https://github.com/Himanshu-18-P/voice-to-voce-bot.git
 cd voice-to-voce-bot
 pip install -r requirements.txt
+
+## Configuration
+- mkdir log
+- Ensure that .env.secrets in the project root contains your keys
+  GROQ_API_KEY='your_groq_api_key'
+  API_KEY='your_api_key'
+- Place google_tts.json inside google_api/
+  core/google_api/google_tts.json
+-Place your PDF in system_prompt/
+  system_prompt/your_file.pdf
+
+## Usage
+
+- Generate embeddings from your PDF
+  python creat_db.py
+- In main.py, pass the db_path to create_app()
+  app = create_app(db_path='path_to_your_db')
+- Run the application
+  python main.py
+- Follow the on-screen instructions. Speak your query, and the bot will respond with a synthesized, human-like voice.
+
