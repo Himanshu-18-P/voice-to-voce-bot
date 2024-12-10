@@ -199,7 +199,7 @@
             if (finalText && !shouldStopAll) {
                 statusMsg.textContent = "Processing final text...";
                 // Add user message to conversation
-                addMessage({ role: 'user', text: finalText });
+                addMessage({ role: 'user', text: finalText});
                 sendToBackend(finalText);
             } else {
                 if (shouldStopAll) {
@@ -216,7 +216,7 @@
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ text: text })
+                body: JSON.stringify({ text: text , is_audio: false })
             })
             .then(response => response.json())
             .then(data => {

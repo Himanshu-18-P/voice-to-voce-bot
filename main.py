@@ -25,9 +25,11 @@ def create_app():
     @app.route('/process' , methods = ['POST'])
     def process():
         try:
-            "this api will take text from user ,process it and audio response"
+            "this api will take text or audio from user ,process it and audio response"
             data = request.json
             input = data.get('text' , '')
+            if data.get("is_audio" , False):
+                input = init.stt(input)
             res = asyncio.run(init.process.process_text(input))
             audio = init.tts.googletts_base64_audio(res)
             return {'text' : res  , "audio" : audio}

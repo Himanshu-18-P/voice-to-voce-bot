@@ -22,7 +22,7 @@ class GroqAIProcessor:
     def __init__(self):
         self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"),)
 
-    
+    # groq api call function
     async def run_completion(self,user_input):
         resp = self.client.chat.completions.create(
             messages=[
