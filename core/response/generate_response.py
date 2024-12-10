@@ -23,12 +23,12 @@ class GroqAIProcessor:
         self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"),)
 
     # groq api call function
-    async def run_completion(self,user_input):
+    async def run_completion(self,user_input ,text ):
         resp = self.client.chat.completions.create(
             messages=[
                 {
                  "role": "system",
-                 "content": prompt_for_response
+                 "content": f'guidlines: {prompt_for_response} , context_of_answer : {text}'
                 },
 
             {
@@ -44,12 +44,12 @@ class GroqAIProcessor:
 
         return resp.choices[0].message.content
     
-    async def process_text(self , user_text):
+    async def process_text(self , user_text , context):
         try:
             if user_text == '':
                 return "please repeat your question"
             
-            res = await self.run_completion(user_text)
+            res = await self.run_completion(user_text, context)
             return res 
         
         except Exception as e:

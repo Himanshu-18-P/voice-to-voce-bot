@@ -3,3 +3,7 @@ google-cloud-texttospeech
 pydub
 openai
 python-dotenv
+langchain-community
+langchain-huggingface
+faiss-cpu
+pypdf

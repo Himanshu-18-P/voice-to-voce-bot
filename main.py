@@ -13,7 +13,9 @@ file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
 
-def create_app():
+# init = ProcessInput()
+
+def create_app(db_path='fassi_db/smart'):
 
     app = Flask(__name__)
 
@@ -30,7 +32,8 @@ def create_app():
             input = data.get('text' , '')
             if data.get("is_audio" , False):
                 input = init.stt(input)
-            res = asyncio.run(init.process.process_text(input))
+            relvent_text = init.get_data(input , db_path)
+            res = asyncio.run(init.process.process_text(input , relvent_text))
             audio = init.tts.googletts_base64_audio(res)
             return {'text' : res  , "audio" : audio}
         
@@ -42,5 +45,7 @@ def create_app():
 
 if __name__ == '__main__':
     init = ProcessInput()
-    app = create_app()
+    app = create_app('fassi_db/smart')
     app.run(debug=True)
+
+# app = create_app()
