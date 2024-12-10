@@ -32,20 +32,20 @@
 ## Configuration
 - mkdir log
 - Ensure that .env.secrets in the project root contains your keys
-  GROQ_API_KEY='your_groq_api_key'
-  API_KEY='your_api_key'
+  - GROQ_API_KEY='your_groq_api_key'
+  - API_KEY='your_api_key'
 - Place google_tts.json inside google_api/
-  core/google_api/google_tts.json
--Place your PDF in system_prompt/
-  system_prompt/your_file.pdf
+  - core/google_api/google_tts.json
+- Place your PDF in system_prompt/
+  - system_prompt/your_file.pdf
 
 ## Usage
 
 - Generate embeddings from your PDF
-  python creat_db.py
+  - python creat_db.py
 - In main.py, pass the db_path to create_app()
-  app = create_app(db_path='path_to_your_db')
+  - app = create_app(db_path='path_to_your_db')
 - Run the application
-  python main.py
+  - python main.py
 - Follow the on-screen instructions. Speak your query, and the bot will respond with a synthesized, human-like voice.
 
