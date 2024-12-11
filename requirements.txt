@@ -7,3 +7,5 @@ langchain-community
 langchain-huggingface
 faiss-cpu
 pypdf
+groq
+flask_cors

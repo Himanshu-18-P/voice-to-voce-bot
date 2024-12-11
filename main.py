@@ -2,6 +2,8 @@ from flask import Flask, send_from_directory , request , jsonify
 from core.api import *
 import asyncio
 import logging
+from flask_cors import CORS
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -18,6 +20,7 @@ logger.addHandler(file_handler)
 def create_app(db_path='fassi_db/smart'):
 
     app = Flask(__name__)
+    # CORS(app)
 
     @app.route('/')
     def serve_index():
@@ -46,6 +49,6 @@ def create_app(db_path='fassi_db/smart'):
 if __name__ == '__main__':
     init = ProcessInput()
     app = create_app('fassi_db/smart')
-    app.run(debug=True)
+    app.run(debug=True) # https://haier.interactivedemos.io/
 
-# app = create_app()
+# app = create_app('fassi_db/smart')
